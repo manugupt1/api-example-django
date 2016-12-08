@@ -29,9 +29,8 @@ ALLOWED_HOSTS = []
 
 SOCIAL_AUTH_DRCHRONO_KEY = 'p0aSxp31LZjGqWU751pZC62t3EGlI6hEP2WHiEok'
 SOCIAL_AUTH_DRCHRONO_SECRET = 'l2kb5Tq5Faf7EzHh4iZtIsFamb9IIwEXDuWAN3qDLAsHXXdGxmi0ZuWZ6f9AnDotA1tDYzeo6ghZl0m4XmycotpNumdNY7zONbmhkRhBiQNqBopjKsIkegyTRVCA78tk'
-LOGIN_REDIRECT_URL = 'http://162.243.185.175:8080/oauth'
+LOGIN_REDIRECT_URL = 'http://162.243.185.175:8080/checkin'
 
-print LOGIN_REDIRECT_URL
 
 # Application definition
 
@@ -44,6 +43,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'drchrono',
     'social.apps.django_app.default',
+    'checkin',
+    'bootstrap3'
 )
 
 MIDDLEWARE_CLASSES = (

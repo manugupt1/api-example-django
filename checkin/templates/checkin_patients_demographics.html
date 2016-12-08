@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+
+Manu
+{% block content %}
+
+
+<form id="{{ id }}" method="post" >
+
+    {% csrf_token %} 
+    {% bootstrap_form form %}
+
+    {% buttons %}
+        <button type="submit" class="btn btn-primary">
+            {% bootstrap_icon "star" %} Check in
+        </button>
+    {% endbuttons %}
+</form>
+
+{% endblock %}
