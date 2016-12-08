@@ -20,6 +20,9 @@ import requests, urllib
 
 import datetime as dt
 import time
+import json
+
+from checkin.models import PatientCheckinVisitModel
 
 def index(request):
     context_dict = {}
@@ -38,9 +41,9 @@ class APIUtils:
     def __init__(self, user):
         self.user = user
         access_token = user.social_auth.get(user = user).extra_data['access_token']
-        print user.social_auth.get(user = user).uid
         self.headers = {'Authorization': 'Bearer {0}'.format(access_token)}
-    
+        self.headers['Content-Type'] = 'application/json'
+
     def build_url(self, endpoint, id):
         final_url = self.url+ endpoint
         if id is not None:
@@ -52,10 +55,25 @@ class APIUtils:
         data = requests.get(url, params = params, headers = self.headers).json()
         return data
 
+    def patch(self, params, endpoint, id):
+        url = self.build_url(endpoint, id)
+        print "params", params
+        print "json_params", json.dumps(params)
+        print "headers", self.headers
+        print "url",  url
+        data = requests.patch(url, params = json.dumps(params), headers = self.headers)
+        return data
+
+    def put(self, params, endpoint, id):
+        url = self.build_url(endpoint, id)
+        data = requests.put(url, params = json.dumps(params), headers = self.headers)
+        print requests.get(url, headers = self.headers).json()
+        return data
+
     def get_user_id(self):
         return self.user.social_auth.get(user = self.user).uid
 
-
+#Needs to go into utils
 def renderedHttpResponse(template_name, request, context_dict):
     template = get_template(template_name)
     context = RequestContext(request, context_dict)
@@ -109,11 +127,11 @@ class AppointmentsView(PatientsView):
 
         params['patient'] = patient_id
         params['doctor'] = doctor_id
-        params['date'] = dt.datetime.now().strftime('%Y-%m-%d')
+        params['date'] = dt.datetime.now().strftime('%Y-%m-%d') #this is a poor implmentation
         res = APIUtils(self.user).get(params = params, endpoint = 'appointments')
         
         #If you look at theAPI, it returns the results in sorted order
-        now = dt.datetime.now()
+        now = dt.datetime.now() - dt.timedelta(hours = 5)
         for item in res['results']:
             scheduled =  Utils().str_to_date(item['scheduled_time'])
             print scheduled, now
@@ -125,17 +143,43 @@ class AppointmentsView(PatientsView):
         context_dict = {}
         self.user = request.user
     
-        res = self.get_patient(request.GET.get('id'))
+        patient = self.get_patient(request.GET.get('id'))
         nearest_appointment = self.get_nearest_appointment(patient_id = request.GET.get('id'), doctor_id = self.get_doctor_id(self.user))
-        if res and nearest_appointment:
+        if patient and nearest_appointment:
             context_dict['appointments'] = True
+            request.session['patient_id'] = request.GET.get('id')
+            request.session['nearest_appointment'] = nearest_appointment['id']
     
 
-        context_dict['form'] = PatientDemographicsForm(initial = res)
+        context_dict['form'] = PatientDemographicsForm(initial = patient)
         return renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
-        print request.POST.dict()
+#        print request.POST.dict()
+        self.user = request.user
+        #patch demogaphics
+        self.put_demographics(request) #PUT & PATCH was not working was not working so mocing on to patch, modify later
+        #patch appointments
 
-        #change the link to update
+        #update models
+        print request.POST['id']
+        self.update_checkin(patient = request.POST['id'], doctor = self.get_doctor_id(self.user))
         return HttpResponse('Manu')
+
+    def update_checkin(self, patient, doctor, *args, **kwargs):
+        patient_id = patient
+        doctor_id = doctor
+        print "yo"
+        checkin_time = dt.datetime.now()
+        Patient = PatientCheckinVisitModel(patient_id = patient_id, doctor_id = doctor_id, checkin_time = checkin_time)
+        Patient.save()
+
+    def put_demographics(self, request, *args, **kwargs):
+        params = request.POST.dict()
+        del params['id'] 
+        del params['csrfmiddlewaretoken']
+        params['zip_code'] = int(params['zip_code'])
+        patient  = self.get_patient(request.POST['id'])
+        data = APIUtils(request.user).patch(params , endpoint = 'patients', id=request.POST['id'])
+        print data
+        
