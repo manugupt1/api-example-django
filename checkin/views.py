@@ -35,6 +35,7 @@ class APIUrlBuilder:
     url = 'https://drchrono.com/api/'
     def __init__(self, user):
         access_token = user.social_auth.get(user = user).extra_data['access_token']
+        print user.social_auth.get(user = user).uid
         self.headers = {'Authorization': 'Bearer {0}'.format(access_token)}
     
     def build_url(self, endpoint, id):
@@ -81,12 +82,19 @@ def doctor(request):
 class AppointmentsView(PatientsView):
     
     template_name = 'checkin_patients_demographics.html'
+    user = None
+
+    def get_patient(self, id):
+        res = APIUrlBuilder(user).get(params = None, endpoint = 'patients', id = request.GET.get('id'))
+        
 
     def get(self, request, *args, **kwargs):
         context_dict = {}
-        api = APIUrlBuilder(request.user)
-        res = api.get(params = None, endpoint = 'patients', id = request.GET.get('id'))
-        
+        self.user = request.user
+
+        res = APIUrlBuilder(self.user).get(params = None, endpoint = 'appointments')
+        print res
+
         context_dict['form'] = PatientDemographicsForm(initial = res)
         return renderedHttpResponse(self.template_name, request, context_dict)
 

@@ -7,7 +7,7 @@ class PatientCheckinForm(forms.Form):
 
 class PatientDemographicsForm(forms.Form):
     id = forms.IntegerField(widget = forms.HiddenInput)
-    address = forms.CharField(label = 'Address')
-    cell_phone = forms.IntegerField(label = 'Cell number')
-    email = forms.EmailField(label= 'Email')
-    zip_code = forms.IntegerField(label = 'Zip code')
+    address = forms.CharField(label = 'Address', required = False)
+    cell_phone = forms.IntegerField(label = 'Cell number', required = False)
+    email = forms.EmailField(label= 'Email', required = False)
+    zip_code = forms.IntegerField(label = 'Zip code', required =  False)
