@@ -11,9 +11,15 @@ Manu
     {% bootstrap_form form %}
 
     {% buttons %}
+    {% if appointments %}
         <button type="submit" class="btn btn-primary">
             {% bootstrap_icon "star" %} Check in
         </button>
+    {% else %}
+        <button type="submit" class="btn btn-warning">
+            {% bootstrap_icon "star" %} No appointments, go back
+        </button>
+    {% endif %}
     {% endbuttons %}
 </form>
 
