@@ -16,9 +16,9 @@ Manu
             {% bootstrap_icon "star" %} Check in
         </button>
     {% else %}
-        <button type="submit" class="btn btn-warning">
+        <a href="/checkin/patients" class="btn btn-warning">
             {% bootstrap_icon "star" %} No appointments, go back
-        </button>
+        </a>
     {% endif %}
     {% endbuttons %}
 </form>
