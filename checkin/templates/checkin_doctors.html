@@ -3,44 +3,50 @@
 
 {% block content %}
 
+
+<div class="jumbotron">
+    <h3 class="lead text-center text-capitalize">
     {% if average %}
         Overall average waiting time is {{ average }} minutes
     {% else %}
-        Nothing is measured yet
+        We do not have any measurements for overall average times
     {% endif  %}
+    </h3>
+</div>
 
-<br />
-
-The patients are
-<form id="{{ id }}" method="post">
-
-    {% csrf_token %}
-    <table class = "table">
-        <tr> 
-            <td> Patient name </td>
-            <td> Checkin </td>
-            <td> Reservation </td>
+<div class="container">
+    <table class = "table table-hover">
+        <thead>
+            <th> Patient name </th>
+            <th> Checkin time</th>
+            <th></th>
+        </thead>
+       <tr>
+            <td> Dummy patient  </td>
+            <td> Dummy checkin time</td>
+            <td> 
+                <input type="hidden" id = "checkin" name="checkin" value="{{ item.id }}"  class='btn btn-primary' />
+                <input type="button" class='btn btn-primary' value="See now" />
+            </td>
         </tr>
+ 
         {% for item in checkin %}
+         <form id="{{ id }}" method="post">
+            {% csrf_token %}
         <tr>
-            <td> 1</td>
+            <td> {{ item.patient }} </td>
             <td>{{ item.checkin_time }} | {{ item.in_session_time }} </td>
-            <td> <label class='btn btn-primary'>Checkin</label> <input type="submit" id = "checkin" name="checkin" value="{{ item.id }}"  class='btn btn-primary' /></td>
+            <td> 
+                <input type="hidden" id = "checkin" name="checkin" value="{{ item.id }}"  class='btn btn-primary' />
+                <input type="submit" class='btn btn-primary' name="check" value="See now" />
+            </td>
+ 
         </tr>
+
+        </form>
         {% endfor %}
     </table>
-
-</form>
-
+</div>
 {% endblock %}
 
 
-<script src="text/javascript">
-    $(document).ready(function() {
-        console.log("here");
-
-        $.post('', function(data) {
-            console.log(data)
-        }
-    }
-</script>

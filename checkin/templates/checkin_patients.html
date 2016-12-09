@@ -3,6 +3,14 @@
 
 {% block content %}
 
+{% if error %}
+<div class="row">
+
+    <div class="col-lg-12">
+        <p class="text-center lead bg-danger"> Are you sure the user exists? </p>
+    </div>
+</div>
+{% endif %}
 
 <form id="{{ id }}" method="get" action="{{ url }}">
 
