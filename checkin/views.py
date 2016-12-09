@@ -132,6 +132,10 @@ class DoctorsView(View):
     def get(self, request, *args, **kwargs):
         context_dict = {}
         self.user = request.user
+        print self.user.user_permissions
+
+        if request.user.is_anonymous():
+            raise Exception('User not logged in')
         #calculate overall average over here, add to the context dict
         context_dict['checkin']  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = True)
         context_dict['average'] = self.calculate_overall_average()
@@ -141,6 +145,8 @@ class DoctorsView(View):
         return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
+        if request.user.is_anonymous():
+            raise Exception('User not logged in')
         self.user = request.user
         checkin_id = request.POST['checkin']       
         checkin_model = PatientCheckinVisitModel.objects.get(id = checkin_id)
@@ -151,9 +157,12 @@ class DoctorsView(View):
 
 
     def calculate_overall_average(self):
-        already_checked_in  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = False)
-        timediff_checkin_session = [((item.in_session_time - item.checkin_time).seconds)//60 for item in already_checked_in]
-        average = sum(timediff_checkin_session) / len(timediff_checkin_session)
+        try:
+            already_checked_in  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = False)
+            timediff_checkin_session = [((item.in_session_time - item.checkin_time).seconds)//60 for item in already_checked_in]
+            average = sum(timediff_checkin_session) / len(timediff_checkin_session)
+        except ZeroDivisionError:
+            average = 0
         return average
 
     #THis function repeats, poor design
@@ -164,12 +173,11 @@ class DoctorsView(View):
         return res
  
     def get_patient_names(self, PatientVisitModelObjects):
-        print "here"
         appointment_ids = [ item.appointment_id for item in PatientVisitModelObjects ]
         patient_names = []
         for item in appointment_ids:
             res = self.get_patient(APIUtils(self.user).get(params = {}, endpoint = 'appointments', id = item)['patient'])
-            name = res['first_name'] + " " + res['last_name']
+            name =  res['first_name'] + ' ' + res['last_name']
             patient_names.append(name)
         return patient_names
 
