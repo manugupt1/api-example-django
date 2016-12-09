@@ -18,3 +18,6 @@ SOCIAL_AUTH_DRCHRONO_SECRET
 SOCIAL_AUTH_DRCHRONO_SCOPE
 LOGIN_REDIRECT_URL
 ```
+
+Social_auth uses complete/backend_name in its pipeline as the URL.
+Register <hostname>/complete/drchrono/ as redirect urls in your django app on the web portal
