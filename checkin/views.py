@@ -47,13 +47,6 @@ class PatientsView(View):
             context_dict['form'] = PatientCheckinForm
             return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
-
-   
-
-
-def doctor(request):
-    return HttpResponse('doctor checkin')
-
 class AppointmentsView(PatientsView):
     
     template_name = 'checkin_patients_demographics.html'
@@ -61,10 +54,8 @@ class AppointmentsView(PatientsView):
 
     def get_patient(self, id):
         res = APIUtils(self.user).get(params = None, endpoint = 'patients', id = id)
-        
         if res.has_key('detail') and res['detail']!='Not found.':
             return None
-
         return res
         
     def get_doctor_id(self, user):
@@ -134,16 +125,13 @@ class DoctorsView(View):
     user = None
     def get(self, request, *args, **kwargs):
         context_dict = {}
-        
+        self.user = request.user
         #calculate overall average over here, add to the context dict
-                
         context_dict['checkin']  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = True)
-        already_checked_in  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = False)
-        timediff_checkin_session = [((item.in_session_time - item.checkin_time).seconds)//60 for item in already_checked_in]
-        average = sum(timediff_checkin_session) / len(timediff_checkin_session)
+        context_dict['average'] = self.calculate_overall_average()
+        context_dict['patient_name'] = self.get_patient_names(context_dict['checkin'])
 
-        context_dict['average'] = average
-
+        context_dict['checkin'] = zip(context_dict['patient_name'], context_dict['checkin'])
         return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
@@ -157,4 +145,26 @@ class DoctorsView(View):
 
 
     def calculate_overall_average(self):
-        objects = PatientCheckinVisitModel.objects.exclude(checkin_time = False, in_session_time = False)
+        already_checked_in  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = False)
+        timediff_checkin_session = [((item.in_session_time - item.checkin_time).seconds)//60 for item in already_checked_in]
+        average = sum(timediff_checkin_session) / len(timediff_checkin_session)
+        return average
+
+    #THis function repeats, poor design
+    def get_patient(self, id):
+        res = APIUtils(self.user).get(params = None, endpoint = 'patients', id = id)
+        if res.has_key('detail') and res['detail']!='Not found.':
+            return None
+        return res
+ 
+    def get_patient_names(self, PatientVisitModelObjects):
+        print "here"
+        appointment_ids = [ item.appointment_id for item in PatientVisitModelObjects ]
+        patient_names = []
+        for item in appointment_ids:
+            res = self.get_patient(APIUtils(self.user).get(params = {}, endpoint = 'appointments', id = item)['patient'])
+            name = res['first_name'] + " " + res['last_name']
+            patient_names.append(name)
+        return patient_names
+
+

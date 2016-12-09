@@ -12,6 +12,8 @@
         We do not have any measurements for overall average times
     {% endif  %}
     </h3>
+
+
 </div>
 
 <div class="container">
@@ -21,23 +23,16 @@
             <th> Checkin time</th>
             <th></th>
         </thead>
-       <tr>
-            <td> Dummy patient  </td>
-            <td> Dummy checkin time</td>
-            <td> 
-                <input type="hidden" id = "checkin" name="checkin" value="{{ item.id }}"  class='btn btn-primary' />
-                <input type="button" class='btn btn-primary' value="See now" />
-            </td>
-        </tr>
- 
-        {% for item in checkin %}
+
+        {%for item  in checkin %}
          <form id="{{ id }}" method="post">
             {% csrf_token %}
         <tr>
-            <td> {{ item.patient }} </td>
-            <td>{{ item.checkin_time }} | {{ item.in_session_time }} </td>
+            <td> {{ item.0 }}
+            </td>
+            <td>{{ item.1.checkin_time }} </td>
             <td> 
-                <input type="hidden" id = "checkin" name="checkin" value="{{ item.id }}"  class='btn btn-primary' />
+                <input type="hidden" id = "checkin" name="checkin" value="{{ item.1.id }}"  class='btn btn-primary' />
                 <input type="submit" class='btn btn-primary' name="check" value="See now" />
             </td>
  
