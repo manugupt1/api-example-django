@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 
@@ -69,11 +68,6 @@ class APIUtils:
     def get_user_id(self):
         return self.user.social_auth.get(user = self.user).uid
 
-#Needs to go into utils
-def renderedHttpResponse(template_name, request, context_dict):
-    template = get_template(template_name)
-    context = RequestContext(request, context_dict)
-    return HttpResponse(template.render(context))
 
 class PatientsView(View):
     template_name = 'checkin_patients.html'
@@ -90,14 +84,10 @@ class PatientsView(View):
                 context_dict['error'] = data['error']
             context_dict = {}
             context_dict['form'] = PatientCheckinForm
-            return renderedHttpResponse(self.template_name, request, context_dict)
+            return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
 
-class Utils:
-    def str_to_date(self, date_str):
-        return dt.datetime.strptime(date_str,'%Y-%m-%dT%H:%M:%S')
-
-    
+   
 
 
 def doctor(request):
@@ -130,7 +120,7 @@ class AppointmentsView(PatientsView):
         #If you look at theAPI, it returns the results in sorted order
         now = dt.datetime.now() - dt.timedelta(hours = 5)
         for item in res['results']:
-            scheduled =  Utils().str_to_date(item['scheduled_time'])
+            scheduled =  Utils.str_to_date(item['scheduled_time'])
             print scheduled, now
             if now < scheduled:
                 return item                    
@@ -147,7 +137,7 @@ class AppointmentsView(PatientsView):
             request.session['patient_id'] = request.GET.get('id')
             request.session['nearest_appointment'] = nearest_appointment['id']
         context_dict['form'] = PatientDemographicsForm(initial = patient)
-        return renderedHttpResponse(self.template_name, request, context_dict)
+        return Utils.renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
         self.user = request.user
@@ -193,7 +183,7 @@ class DoctorsView(View):
 
         context_dict['average'] = average
 
-        return renderedHttpResponse(self.template_name, request, context_dict)
+        return Utils.renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
         self.user = request.user
