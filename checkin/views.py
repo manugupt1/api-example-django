@@ -29,21 +29,23 @@ def index(request):
     return HttpResponse(template.render(context))
 
 
-
-
 class PatientsView(View):
     template_name = 'checkin_patients.html'
     def get(self, request, *args, **kwargs):
         data = request.GET.dict()
+        context_dict = {}
+        if data.has_key('checkedin'):
+            context_dict['checkedin'] = data['checkedin']
+        if data.has_key('error') and data['error']:
+            print "here"
+            context_dict['error'] = data['error']
+ 
         if data.has_key('first_name') and data.has_key('last_name'):
             res = APIUtils(request.user).get(params = data, endpoint='patients', id = None)
             if len(res['results'])==1:
                 return HttpResponseRedirect('/checkin/patients/appointments?id='+str(res['results'][0]['id']))
             return HttpResponseRedirect('/checkin/patients?error=1')
         else:
-            if data.has_key('error') and data['error']==1:
-                context_dict['error'] = data['error']
-            context_dict = {}
             context_dict['form'] = PatientCheckinForm
             return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
@@ -89,6 +91,8 @@ class AppointmentsView(PatientsView):
             request.session['patient_id'] = request.GET.get('id')
             request.session['nearest_appointment'] = nearest_appointment['id']
         context_dict['form'] = PatientDemographicsForm(initial = patient)
+
+
         return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
@@ -98,7 +102,9 @@ class AppointmentsView(PatientsView):
         #update models
         self.patch_appointments(request)
         self.update_checkin(request.session['nearest_appointment'])
-        return HttpResponseRedirect('/checkin/patients/')
+
+        request.session['checkedin'] = True
+        return HttpResponseRedirect('/checkin/patients?checkedin=1')
 
     def update_checkin(self, appointment, *args, **kwargs):
         checkin_time = dt.datetime.now()

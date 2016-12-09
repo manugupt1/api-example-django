@@ -3,6 +3,16 @@
 
 {% block content %}
 
+{% if checkedin %}
+ <div class="row">
+
+    <div class="col-lg-12">
+        <p class="text-center lead bg-success"> You have been successfully checked in </p>
+    </div>
+</div>
+{% endif %}
+
+
 {% if error %}
 <div class="row">
 
