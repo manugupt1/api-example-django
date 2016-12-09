@@ -20,4 +20,7 @@ class Utils:
         context = RequestContext(request, context_dict)
         return HttpResponse(template.render(context))
 
-
+    @staticmethod
+    def user_check(user):
+        print user
+        return user.is_authenticated() and not user.is_anonymous()

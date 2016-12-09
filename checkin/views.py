@@ -3,6 +3,9 @@ from django.http import HttpResponseRedirect
 
 from django.views.generic import View, TemplateView
 
+from django.contrib.auth.decorators import user_passes_test
+from django.utils.decorators import method_decorator
+
 from django.template.loader import get_template
 from django.template import RequestContext
 
@@ -20,17 +23,21 @@ import time
 
 from checkin.models import PatientCheckinVisitModel
 
-def index(request):
-    context_dict = {}
-    context_dict['patient_checkin_url'] = 'patients/'
-    context_dict['doctor_checkin_url'] = 'doctors/'
-    template = get_template('checkin_index.html')
-    context = RequestContext(request, context_dict)
-    return HttpResponse(template.render(context))
+class IndexView(View):
+
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
+    def get(self,request, *args, **kwargs):
+        context_dict = {}
+        context_dict['patient_checkin_url'] = 'patients/'
+        context_dict['doctor_checkin_url'] = 'doctors/'
+        template = get_template('checkin_index.html')
+        context = RequestContext(request, context_dict)
+        return HttpResponse(template.render(context))
 
 
 class PatientsView(View):
     template_name = 'checkin_patients.html'
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
     def get(self, request, *args, **kwargs):
         data = request.GET.dict()
         context_dict = {}
@@ -80,6 +87,7 @@ class AppointmentsView(PatientsView):
                 return item                    
         return None
 
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
     def get(self, request, *args, **kwargs):
         context_dict = {}
         self.user = request.user
@@ -95,6 +103,7 @@ class AppointmentsView(PatientsView):
 
         return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
     def post(self, request, *args, **kwargs):
         self.user = request.user
         self.patch_demographics(request) #PUT & PATCH was not working was not working so mocing on to patch, modify later
@@ -129,13 +138,12 @@ class DoctorsView(View):
 
     template_name = 'checkin_doctors.html'
     user = None
+
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
     def get(self, request, *args, **kwargs):
         context_dict = {}
         self.user = request.user
-        print self.user.user_permissions
 
-        if request.user.is_anonymous():
-            raise Exception('User not logged in')
         #calculate overall average over here, add to the context dict
         context_dict['checkin']  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = True)
         context_dict['average'] = self.calculate_overall_average()
@@ -144,6 +152,7 @@ class DoctorsView(View):
         context_dict['checkin'] = zip(context_dict['patient_name'], context_dict['checkin'])
         return Utils().renderedHttpResponse(self.template_name, request, context_dict)
 
+    @method_decorator(user_passes_test(Utils.user_check, login_url = '/'))
     def post(self, request, *args, **kwargs):
         if request.user.is_anonymous():
             raise Exception('User not logged in')
