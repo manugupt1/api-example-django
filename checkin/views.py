@@ -58,11 +58,11 @@ class APIUtils:
     def patch(self, params, endpoint, id):
         url = self.build_url(endpoint, id)
         data = requests.patch(url, data = json.dumps(params), headers = self.headers)
-        print requests.get(url, headers = self.headers)
         return data
 
     def put(self, params, endpoint, id):
         url = self.build_url(endpoint, id)
+        print url
         data = requests.put(url, data = json.dumps(params), headers = self.headers)
         return data
 
@@ -183,9 +183,16 @@ class DoctorsView(View):
     user = None
     def get(self, request, *args, **kwargs):
         context_dict = {}
-
-        context_dict['checkin']  = PatientCheckinVisitModel.objects.all()
         
+        #calculate overall average over here, add to the context dict
+                
+        context_dict['checkin']  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = True)
+        already_checked_in  = PatientCheckinVisitModel.objects.filter(in_session_time__isnull = False)
+        timediff_checkin_session = [((item.in_session_time - item.checkin_time).seconds)//60 for item in already_checked_in]
+        average = sum(timediff_checkin_session) / len(timediff_checkin_session)
+
+        context_dict['average'] = average
+
         return renderedHttpResponse(self.template_name, request, context_dict)
 
     def post(self, request, *args, **kwargs):
@@ -194,11 +201,15 @@ class DoctorsView(View):
         checkin_model = PatientCheckinVisitModel.objects.get(id = checkin_id)
         checkin_model.in_session_time = dt.datetime.now()
         checkin_model.save()
-#       average = self.calculate_overall_average()
 
-#        appointment = APIUtils(self.user).patch(params, endpoint = 'appointments', id = request.POST['checkin'])
-#        print appointment
+        #calculate overall average
 
+        #get patient id
+        params = {}
+        params['status'] = 'In Session'
+        appointment = checkin_model.appointment_id
+        data = APIUtils(self.user).patch(params, endpoint = 'appointments', id =  appointment)
+ 
         return HttpResponse("1")
 
 

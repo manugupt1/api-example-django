@@ -3,7 +3,11 @@
 
 {% block content %}
 
-Overall seeing time is
+    {% if average %}
+        Overall average waiting time is {{ average }} minutes
+    {% else %}
+        Nothing is measured yet
+    {% endif  %}
 
 <br />
 
